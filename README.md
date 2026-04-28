@@ -1,6 +1,6 @@
 # <p align='center'> polyast </p>
 
-Traverses any AST, nodes of which have `type` property.
+**Iteratively** traverses any AST, nodes of which have `type` property.
 
 ### Usage
 
