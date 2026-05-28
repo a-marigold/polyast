@@ -1,6 +1,5 @@
-import type { NodeLike, NodeParentLike, OnEnter, OnExit, Traverse } from './types';
-
 import { SKIP, STOP } from './constants';
+import type { NodeBase, NodeParentLike, OnEnter, OnExit, Traverse } from './types';
 
 /**
  *
@@ -31,125 +30,136 @@ import { SKIP, STOP } from './constants';
  */
 
 export const traverse: Traverse = (
-    node: NodeLike,
+	node: NodeBase,
 
-    onEnter: OnEnter<NodeLike, NodeParentLike | undefined> | null,
-    onExit: OnExit<NodeLike, NodeParentLike | undefined> | null,
+	onEnter: OnEnter<NodeBase, NodeParentLike | undefined> | null,
+	onExit: OnExit<NodeBase, NodeParentLike | undefined> | null,
 
-    parent?: NodeParentLike,
+	parent?: NodeParentLike,
 
-    key?: string,
+	key?: string,
 ): void => {
-    /**
-     *
-     * `0` means calling `onEnter`.
-     *
-     * `1` means calling `onExit`.
-     *
-     */
-    type NodeState = 0 | 1;
+	/**
+	 *
+	 * `0` means calling `onEnter`.
+	 *
+	 * `1` means calling `onExit`.
+	 *
+	 */
 
-    /**
-     *
-     * `nodeStack` is flattened for better performance.
-     *
-     * It has significant order which must be supported:
-     *
-     * ```typescript
-     * nodeStack.pop(); // `NodeState`
-     * nodeStack.pop(); // Key
-     * nodeStack.pop(); // Parent | Undefined
-     * nodeStack.pop(); // Node
-     *
-     * nodeStack.push(Node, Parent, Key, 0 | 1);
-     * ```
-     */
-    const nodeStack: (NodeLike | NodeParentLike | undefined | string | NodeState)[] = [
-        node,
-        parent,
-        key,
-        0,
-    ];
+	type NodeState = 0 | 1;
 
-    while (nodeStack.length) {
-        // assertionss below are not dangeruous - see the description of `nodeStack`
-        const nodeState = nodeStack.pop() as NodeState;
-        const key = nodeStack.pop() as string;
-        const parent = nodeStack.pop() as NodeParentLike | undefined;
-        let node = nodeStack.pop() as NodeLike;
+	/**
+	 *
+	 * `nodeStack` is a flat array for better performance.
+	 *
+	 * It has significant order which must be supported:
+	 *
+	 * ```typescript
+	 * nodeStack.pop(); // `NodeState`
+	 * nodeStack.pop(); //   Key
+	 * nodeStack.pop(); // Parent | Undefined
+	 * nodeStack.pop(); // Node
+	 *
+	 * nodeStack.push(Node, Parent, Key, 0 | 1);
+	 * ```
+	 */
+	const nodeStack: (NodeBase | NodeParentLike | undefined | string | NodeState)[] = [
+		node,
+		parent,
+		key,
+		0,
+	];
 
-        if (nodeState) {
-            // assertion is not dangerous because there `nodeState` is not truthy if `onExit` is not provided.
-            const exitResult = (onExit as OnExit<NodeLike, NodeParentLike | undefined>)(
-                node,
-                parent,
-                key,
-            );
+	while (nodeStack.length) {
+		// assertionss below are not dangeruous - see the description of `nodeStack`
+		const nodeState = nodeStack.pop() as NodeState;
+		const key = nodeStack.pop() as string;
+		const parent = nodeStack.pop() as NodeParentLike | undefined;
+		let node = nodeStack.pop() as NodeBase;
 
-            if (exitResult) {
-                if (exitResult === STOP) {
-                    return;
-                }
+		if (nodeState) {
+			// assertion is not dangerous because there `nodeState` is not truthy if `onExit` is not provided.
+			const exitResult = (onExit as OnExit<NodeBase, NodeParentLike | undefined>)(
+				node,
+				parent,
+				key,
+			);
 
-                if (parent) {
-                    (parent as Record<string, unknown>)[key] = exitResult;
-                }
-            }
+			if (exitResult) {
+				if (exitResult === STOP) {
+					return;
+				}
 
-            continue;
-        } else {
-            if (onEnter) {
-                const enterResult = onEnter(node, parent, key);
+				if (parent) {
+					(parent as Record<string, unknown>)[key] = exitResult;
+				}
+			}
 
-                if (enterResult) {
-                    if (enterResult === SKIP) {
-                        continue;
-                    }
+			continue;
+		} else {
+			if (onEnter) {
+				const enterResult = onEnter(node, parent, key);
 
-                    if (enterResult === STOP) {
-                        return;
-                    }
+				if (enterResult) {
+					if (enterResult === SKIP) {
+						continue;
+					}
 
-                    if (parent) {
-                        (parent as Record<string, unknown>)[key] = enterResult;
-                        node = enterResult;
-                    }
-                }
-            }
-            if (onExit) {
-                nodeStack.push(node, parent, key, 1);
-            }
+					if (enterResult === STOP) {
+						return;
+					}
 
-            for (const nodeKey in node) {
-                const property = (node as Record<string, unknown>)[nodeKey];
+					if (parent) {
+						(parent as Record<string, unknown>)[key] =
+							enterResult;
+						node = enterResult;
+					}
+				}
+			}
+			if (onExit) {
+				nodeStack.push(node, parent, key, 1);
+			}
 
-                if (typeof property === 'object' && property) {
-                    if ((property as NodeLike)?.type) {
-                        nodeStack.push(property as NodeLike, node, nodeKey, 0);
+			for (const nodeKey in node) {
+				const property = (node as Record<string, unknown>)[nodeKey];
 
-                        continue;
-                    }
+				if (typeof property === 'object' && property) {
+					if ((property as NodeBase)?.type) {
+						nodeStack.push(
+							property as NodeBase,
+							node,
+							nodeKey,
+							0,
+						);
 
-                    if (Array.isArray(property) && typeof property[0] === 'object') {
-                        let propIndex = property.length - 1;
+						continue;
+					}
 
-                        while (propIndex >= 0) {
-                            nodeStack.push(
-                                property[propIndex],
+					// TODO: stop supporting range and delete the check on 'object'
+					if (
+						Array.isArray(property) &&
+						typeof property[0] === 'object'
+					) {
+						let propIndex = property.length - 1;
 
-                                property as NodeParentLike,
+						while (propIndex >= 0) {
+							nodeStack.push(
+								property[propIndex],
 
-                                propIndex.toString(),
-                                0,
-                            );
+								property as NodeParentLike,
 
-                            propIndex--;
-                        }
+								propIndex.toString(),
+								0,
+							);
 
-                        continue;
-                    }
-                }
-            }
-        }
-    }
+							propIndex--;
+						}
+
+						continue;
+					}
+				}
+			}
+		}
+	}
 };

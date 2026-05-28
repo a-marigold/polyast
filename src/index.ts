@@ -1,4 +1,4 @@
-export type { NodeLike, NodeParentLike, OnEnter, OnExit } from './types';
+export type { NodeBase as NodeLike, NodeParentLike, OnEnter, OnExit } from './types';
 
 export * from './constants';
 
