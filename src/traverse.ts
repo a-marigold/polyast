@@ -1,5 +1,5 @@
 import { SKIP, STOP } from './constants';
-import type { NodeBase, NodeParentLike, OnEnter, OnExit, Traverse } from './types';
+import type { NodeBase, NodeParentLike, OnEnter, OnExit } from './types';
 
 /**
  *
@@ -14,30 +14,16 @@ import type { NodeBase, NodeParentLike, OnEnter, OnExit, Traverse } from './type
  * or {@link STOP} to immediatly stop traversal.
  *
  * @template N Type of possible Node that can appear in AST.
- * @template P Type of `parent`.
  * @param node Root node to be traversed.
- *
  * @param onEnter Can return {@link SKIP} not to traverse the current node.
  * @param onExit Сalled only after all node's children are traversed.
- *   SHOULD NOT return {@link SKIP} because it can cause unexpected behaviour.
- *
- *
- *
- *
- * @param parent Parent of `node`. If this is provided, the root node can be replaced.
- * @param key Key in `parent` of `node`. If `parent` is an array, `key` should be a string of index.
- *
+ *   Must NOT return {@link SKIP} because it can cause unexpected behaviour.
  */
 
-export const traverse: Traverse = (
-	node: NodeBase,
-
-	onEnter: OnEnter<NodeBase, NodeParentLike | undefined> | null,
-	onExit: OnExit<NodeBase, NodeParentLike | undefined> | null,
-
-	parent?: NodeParentLike,
-
-	key?: string,
+export const traverse = <N extends NodeBase>(
+	node: N,
+	onEnter: OnEnter<N, NodeParentLike | undefined> | null,
+	onExit: OnExit<N, NodeParentLike | undefined> | null,
 ): void => {
 	/**
 	 *
@@ -61,26 +47,26 @@ export const traverse: Traverse = (
 	 * nodeStack.pop(); // Parent | Undefined
 	 * nodeStack.pop(); // Node
 	 *
-	 * nodeStack.push(Node, Parent, Key, 0 | 1);
+	 * nodeStack.push(Node, Parent, Key, NodeState);
 	 * ```
 	 */
-	const nodeStack: (NodeBase | NodeParentLike | undefined | string | NodeState)[] = [
+	const nodeStack: (N | NodeParentLike | undefined | string | NodeState)[] = [
 		node,
-		parent,
-		key,
+		undefined,
+		'',
 		0,
 	];
 
 	while (nodeStack.length) {
-		// assertionss below are not dangeruous - see the description of `nodeStack`
+		// Assertions are not dangeruous - see the description of `nodeStack`
 		const nodeState = nodeStack.pop() as NodeState;
 		const key = nodeStack.pop() as string;
 		const parent = nodeStack.pop() as NodeParentLike | undefined;
-		let node = nodeStack.pop() as NodeBase;
+		let node = nodeStack.pop() as N;
 
 		if (nodeState) {
-			// assertion is not dangerous because there `nodeState` is not truthy if `onExit` is not provided.
-			const exitResult = (onExit as OnExit<NodeBase, NodeParentLike | undefined>)(
+			// Assertion is not dangerous 'cause `nodeState` is not truthy if `onExit` is not provided.
+			const exitResult = (onExit as OnExit<N, NodeParentLike | undefined>)(
 				node,
 				parent,
 				key,
@@ -111,7 +97,7 @@ export const traverse: Traverse = (
 					if (parent) {
 						(parent as Record<string, unknown>)[key] =
 							enterResult;
-						node = enterResult;
+						node = enterResult as N;
 					}
 				}
 			}

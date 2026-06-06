@@ -48,6 +48,8 @@ export type OnEnter<N extends NodeBase, P extends NodeParentLike | undefined> = 
  *
  *
  *
+ *
+ *
  */
 
 export type OnExit<N extends NodeBase, P extends NodeParentLike | undefined> = Visitor<
@@ -55,20 +57,3 @@ export type OnExit<N extends NodeBase, P extends NodeParentLike | undefined> = V
 	P,
 	NodeBase | typeof STOP | void | null
 >;
-
-export type Traverse = {
-	<N extends NodeBase>(
-		node: N,
-		onEnter: OnEnter<N, N | N[] | undefined> | null,
-		onExit: OnExit<N, N | N[] | undefined> | null,
-	): void;
-
-	<N extends NodeBase, P extends NodeParentLike>(
-		node: N,
-		onEnter: OnEnter<N, N | N[] | P> | null,
-		onExit: OnExit<N, N | N[] | P> | null,
-
-		parent: P,
-		key: P extends NodeBase ? Extract<keyof P, string> : string,
-	): void;
-};

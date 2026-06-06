@@ -96,34 +96,6 @@ const testTraverseVisitor = (visitorName: 'onEnter' | 'onExit') => {
 			visitorName === 'onExit' ? visitor : null,
 		);
 	});
-
-	it('should replace root node if `parent` and `key` are provided', () => {
-		const root = {
-			type: 'root',
-		};
-
-		const parent = {
-			type: 'parent',
-			value: root,
-		};
-
-		const replacementType = 'replacement';
-
-		const visitor = (node: NodeBase) =>
-			node.type === 'root' ? { type: replacementType } : null;
-
-		traverse(
-			root,
-			visitorName === 'onEnter' ? visitor : null,
-			visitorName === 'onExit' ? visitor : null,
-
-			parent,
-
-			'value',
-		);
-
-		expect(parent.value.type).toBe(replacementType);
-	});
 };
 
 describe('traverse', () => {
