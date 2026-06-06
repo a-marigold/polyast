@@ -22,8 +22,8 @@ import type { NodeBase, NodeParentLike, OnEnter, OnExit } from './types';
 
 export const traverse = <N extends NodeBase>(
 	node: N,
-	onEnter: OnEnter<N, NodeParentLike | undefined> | null,
-	onExit: OnExit<N, NodeParentLike | undefined> | null,
+	onEnter: OnEnter<N, N | N[] | undefined> | null,
+	onExit: OnExit<N, N | N[] | undefined> | null,
 ): void => {
 	/**
 	 *
