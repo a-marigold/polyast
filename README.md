@@ -11,14 +11,14 @@ import { traverse } from 'polyast';
 
 // `traverse` is iterative function so there are not problems with AST depth
 traverse<N, P>( // `N` - type of `node`, `P` - type of `parent`
-    node, // Root node to be traversed
+	node, // Root node to be traversed
 
-    (node, parent?, key?) => {}, // Called on every entrance to node. Can be `null`
+	(node, parent?, key?) => {}, // Called on every entrance to node. Can be `null`
 
-    (node, parent?, key?) => {}, // Called when all children of a node are traversed. Can be `null`
+	(node, parent?, key?) => {}, // Called when all children of a node are traversed. Can be `null`
 
-    parent, // Parent of root node (optional)
-    key, // Key of node in `parent` (optional)
+	parent, // Parent of root node (optional)
+	key, // Key of node in `parent` (optional)
 );
 ```
 
@@ -28,14 +28,14 @@ To replace a node, return a new node
 import { traverse } from 'polyast';
 
 traverse(
-    node,
+	node,
 
-    (node) => {
-        if (node.type === 'Identifier' && node.name === 'foo') {
-            return { type: 'Identifier', name: 'bar' };
-        }
-    },
-    null,
+	(node) => {
+		if (node.type === 'Identifier' && node.name === 'foo') {
+			return { type: 'Identifier', name: 'bar' };
+		}
+	},
+	null,
 );
 ```
 
@@ -45,22 +45,17 @@ To manually replace a node (for example, after traversal), use `parent` and `key
 import { traverse } from 'polyast';
 
 traverse(
-    node,
+	node,
 
-    (
-        node,
-        parent /* It is `null` if there is not a parent of node */,
-        key /* It is an empty string if `parent` is null */,
-    ) => {
-        if (
-            node.type === 'Identifier' &&
-            node.name === 'foo' &&
-            parent &&
-            key
-        ) {
-            parent[key] = { type: 'Identifier', name: 'bar' };
-        }
-    },
+	(
+		node,
+		parent /* It is `null` if there is not a parent of node */,
+		key /* It is an empty string if `parent` is null */,
+	) => {
+		if (node.type === 'Identifier' && node.name === 'foo' && parent && key) {
+			parent[key] = { type: 'Identifier', name: 'bar' };
+		}
+	},
 );
 ```
 
@@ -70,11 +65,11 @@ To fully skip a node, return `SKIP` constant in `onEnter`
 import { traverse, SKIP } from 'polyast';
 
 traverse(
-    node,
+	node,
 
-    (node) => (node.type.includes('JSX') ? SKIP : null), // ✅ Return skip only from `onEnter`
+	(node) => (node.type.includes('JSX') ? SKIP : null), // ✅ Return skip only from `onEnter`
 
-    (node) => (node.type.includes('JSX') ? SKIP : null), // ❌ `SKIP` should not be returned from `onExit`
+	(node) => (node.type.includes('JSX') ? SKIP : null), // ❌ `SKIP` should not be returned from `onExit`
 );
 ```
 
@@ -84,9 +79,9 @@ Return `STOP` constant to stop `traverse` function
 import { traverse, STOP } from 'polyast';
 
 traverse(
-    node,
-    (node) => (node.type === 'Bad' ? STOP : null), // ✅
-    (node) => (node.type === 'Bad' ? STOP : null), // ✅
+	node,
+	(node) => (node.type === 'Bad' ? STOP : null), // ✅
+	(node) => (node.type === 'Bad' ? STOP : null), // ✅
 );
 ```
 
@@ -104,23 +99,23 @@ traverse(
 import { traverse } from 'polyast';
 
 const jsxExpressionContainer = {
-    type: 'JSXExpressionContainer',
-    expression: {
-        /* ... */
-    },
+	type: 'JSXExpressionContainer',
+	expression: {
+		/* ... */
+	},
 };
 
 traverse(
-    jsxExpressionContainer.expression,
+	jsxExpressionContainer.expression,
 
-    (node) =>
-        node.type === 'Identifier' && node.name === 'foo'
-            ? { type: 'Identifier', name: 'bar' }
-            : null,
-    null,
+	(node) =>
+		node.type === 'Identifier' && node.name === 'foo'
+			? { type: 'Identifier', name: 'bar' }
+			: null,
+	null,
 
-    jsxExpressionContainer, // `parent`
+	jsxExpressionContainer, // `parent`
 
-    'expression', // `key`
+	'expression', // `key`
 );
 ```

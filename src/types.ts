@@ -1,5 +1,5 @@
 import type { SKIP, STOP } from './constants';
-// TODO: rename
+
 /**
  *
  *

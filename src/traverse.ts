@@ -95,8 +95,6 @@ export const traverse: Traverse = (
 					(parent as Record<string, unknown>)[key] = exitResult;
 				}
 			}
-
-			continue;
 		} else {
 			if (onEnter) {
 				const enterResult = onEnter(node, parent, key);
@@ -132,15 +130,7 @@ export const traverse: Traverse = (
 							nodeKey,
 							0,
 						);
-
-						continue;
-					}
-
-					// TODO: stop supporting range and delete the check on 'object'
-					if (
-						Array.isArray(property) &&
-						typeof property[0] === 'object'
-					) {
+					} else if (Array.isArray(property)) {
 						let propIndex = property.length - 1;
 
 						while (propIndex >= 0) {
@@ -155,8 +145,6 @@ export const traverse: Traverse = (
 
 							propIndex--;
 						}
-
-						continue;
 					}
 				}
 			}

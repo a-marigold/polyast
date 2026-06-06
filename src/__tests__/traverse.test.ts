@@ -180,9 +180,9 @@ describe('traverse', () => {
 
 		expect(visited).toBe('abcdef');
 	});
-	it('should not traverse non node objects and arrays, elements of which are not nodes', () => {
+	it('should not traverse non-node objects', () => {
 		traverse(
-			{ type: 'Root', o: { noType: 'abc' }, prop: [1, 2, 3] },
+			{ type: 'Root', o: { noType: 'abc' } },
 			(node) => {
 				if (!('type' in node)) {
 					throw new Error();
